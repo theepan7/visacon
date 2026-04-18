@@ -23,7 +23,7 @@ export const AdminDashboard: React.FC = () => {
     const fetchApplications = async () => {
       try {
         const data = await getAllApplications();
-        setApplications(data);
+        setApplications(data as (ApplicationFormData & { id: string })[]);
       } catch (error) {
         console.error('Error fetching applications:', error);
       } finally {
