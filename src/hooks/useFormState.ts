@@ -29,7 +29,7 @@ const initialState: ApplicationFormData = {
 
 export const useFormState = () => {
   const [formData, setFormData] = useState<ApplicationFormData>(initialState);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateField = (field: keyof ApplicationFormData, value: any) => {
