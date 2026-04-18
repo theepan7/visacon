@@ -4,7 +4,7 @@ import { useFirestore } from './hooks/useFirestore';
 import { useAuth } from './hooks/useAuth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './services/firebaseConfig';
-import { v4 as uuidv4 } from 'uuid';   // Fixed: uuid import
+import { v4 as uuidv4 } from 'uuid';
 
 // Components
 import { Landing } from './components/Landing';
@@ -31,11 +31,12 @@ export const App: React.FC = () => {
     resetForm,
   } = useFormState();
 
-  const { saveApplication } = useFirestore();           // Removed unused updateApplication
-  const { user } = useAuth();                           // Removed unused authLoading
+  const { saveApplication, updateApplication } = useFirestore();
+  const { user, loading: authLoading } = useAuth();
 
   const [appLoading, setAppLoading] = useState(false);
   const [appError, setAppError] = useState('');
+  const [applicationId, setApplicationId] = useState('');
   const [caseNumber, setCaseNumber] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -70,10 +71,8 @@ export const App: React.FC = () => {
         setCurrentStep(2);
       } catch (error: any) {
         const fieldErrors: Record<string, string> = {};
-        error.errors?.forEach((err: any) => {
-          if (err.path?.[0]) {
-            fieldErrors[err.path[0]] = err.message;
-          }
+        error.errors.forEach((err: any) => {
+          fieldErrors[err.path[0]] = err.message;
         });
         setFieldErrors(fieldErrors);
       }
@@ -161,15 +160,12 @@ export const App: React.FC = () => {
           previousTravelCountries: formData.previousTravelCountries,
           purposeOfVisit: formData.purposeOfVisit,
           estimatedStayDuration: formData.estimatedStayDuration,
-          // Note: previousVisaRefusalReason is optional and not in schema parse here
         });
         setCurrentStep(4);
       } catch (error: any) {
         const fieldErrors: Record<string, string> = {};
-        error.errors?.forEach((err: any) => {
-          if (err.path?.[0]) {
-            fieldErrors[err.path[0]] = err.message;
-          }
+        error.errors.forEach((err: any) => {
+          fieldErrors[err.path[0]] = err.message;
         });
         setFieldErrors(fieldErrors);
       }
@@ -197,6 +193,7 @@ export const App: React.FC = () => {
               state: formData.state,
               pincode: formData.pincode,
               previousVisaRefusal: formData.previousVisaRefusal,
+              previousVisaRefusalReason: formData.previousVisaRefusalReason,
               previousTravelCountries: formData.previousTravelCountries,
               purposeOfVisit: formData.purposeOfVisit,
               estimatedStayDuration: formData.estimatedStayDuration,
@@ -239,7 +236,7 @@ export const App: React.FC = () => {
           updateField('photoUrl', photoUrl);
         }
 
-        // Upload passport bio page
+        // Upload passport bio
         if (formData.passportBioFile) {
           const passportRef = ref(
             storage,
@@ -255,16 +252,16 @@ export const App: React.FC = () => {
           .toString(36)
           .substring(7)
           .toUpperCase()}`;
-        
         updateField('caseNumber', generatedCaseNumber);
         setCaseNumber(generatedCaseNumber);
 
         // Save to Firestore
-        await saveApplication(formData as ApplicationFormData);
+        const docId = await saveApplication(formData as ApplicationFormData);
+        setApplicationId(docId);
 
         setCurrentStep(5);
       } catch (error: any) {
-        setAppError(error.message || 'Failed to upload documents and save application');
+        setAppError(error.message || 'Failed to upload documents');
       } finally {
         setAppLoading(false);
       }
@@ -304,6 +301,7 @@ export const App: React.FC = () => {
         onReset={() => {
           resetForm();
           setCurrentStep(0);
+          setApplicationId('');
           setCaseNumber('');
         }}
       />
