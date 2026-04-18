@@ -5,11 +5,15 @@ export const BasicInfoSchema = z.object({
   email: z.string().email('Invalid email address'),
   passportNumber: z
     .string()
-    .regex(/^[A-Z]{1}[0-9]{7}$/, 'Invalid Indian passport format'),
+    .min(6, 'Passport number must be at least 6 characters')
+    .max(20, 'Passport number must be under 20 characters')
+    .regex(/^[A-Z0-9]+$/, 'Passport number must contain only letters and numbers'),
   nationality: z.string().min(2, 'Select a valid nationality'),
   phone: z
     .string()
-    .regex(/^[6-9]\d{9}$/, 'Invalid Indian phone number'),
+    .min(7, 'Phone number must be at least 7 digits')
+    .max(15, 'Phone number must be under 15 digits')
+    .regex(/^[0-9+\s\-()]+$/, 'Invalid phone number'),
 });
 
 export const DeepDiveSchema = z.object({
