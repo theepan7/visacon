@@ -4,17 +4,13 @@ import { CheckCircle2, CreditCard, Lock } from 'lucide-react';
 import { SERVICE_FEE_DISPLAY } from '../../utils/constants';
 
 interface StripeCheckoutProps {
-  email: string;
   onPaymentSuccess: (paymentId: string) => void;
-  onPaymentError: (error: string) => void;
   onBack: () => void;
   loading?: boolean;
 }
 
 export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
-  email,
   onPaymentSuccess,
-  onPaymentError,
   onBack,
   loading = false,
 }) => {
