@@ -33,7 +33,7 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
       DeepDiveSchema.parse(data);
       onNext();
     } catch (error: any) {
-      // Errors are handled by parent component via Zod validation errors
+      // Errors handled by parent
     }
   };
 
@@ -48,16 +48,16 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
   }> = [
     {
       key: 'fatherName',
-      label: "Father's Name",
+      label: 'Father\'s Name',
       type: 'text',
-      placeholder: "Enter father's full name",
+      placeholder: 'Enter father\'s full name',
       required: true,
     },
     {
       key: 'motherName',
-      label: "Mother's Name",
+      label: 'Mother\'s Name',
       type: 'text',
-      placeholder: "Enter mother's full name",
+      placeholder: 'Enter mother\'s full name',
       required: true,
     },
     {
@@ -177,7 +177,6 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
           {formFields.map((field) => {
             const value = data[field.key];
 
-            // Handle Select fields
             if (field.type === 'select') {
               return (
                 <div key={field.key}>
@@ -208,7 +207,6 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
               );
             }
 
-            // Handle Textarea
             if (field.type === 'textarea') {
               return (
                 <div key={field.key}>
@@ -234,20 +232,19 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
               );
             }
 
-            // Handle Checkbox
             if (field.type === 'checkbox') {
               return (
-                <div key={field.key} className="flex items-center py-2">
+                <div key={field.key} className="flex items-center">
                   <input
                     type="checkbox"
                     id={field.key}
-                    checked={Boolean(value)}
+                    checked={value || false}
                     onChange={(e) => onUpdate(field.key, e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <label
                     htmlFor={field.key}
-                    className="ml-2 text-sm font-medium text-gray-700 cursor-pointer"
+                    className="ml-2 text-sm font-medium text-gray-700"
                   >
                     {field.label}
                   </label>
@@ -255,14 +252,13 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
               );
             }
 
-            // Default Input component for text, date, tel, etc.
             return (
               <Input
                 key={field.key}
                 label={field.label}
                 type={field.type}
                 placeholder={field.placeholder}
-                value={value !== undefined && value !== null ? String(value) : ''}
+                value={value || ''}
                 onChange={(e) => onUpdate(field.key, e.target.value)}
                 error={errors[field.key]}
                 helperText={field.helperText}
