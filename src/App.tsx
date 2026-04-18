@@ -36,7 +36,6 @@ export const App: React.FC = () => {
 
   const [appLoading, setAppLoading] = useState(false);
   const [appError, setAppError] = useState('');
-  const [applicationId, setApplicationId] = useState('');
   const [caseNumber, setCaseNumber] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -256,8 +255,7 @@ export const App: React.FC = () => {
         setCaseNumber(generatedCaseNumber);
 
         // Save to Firestore
-        const docId = await saveApplication(formData as ApplicationFormData);
-        setApplicationId(docId);
+        await saveApplication(formData as ApplicationFormData);
 
         setCurrentStep(5);
       } catch (error: any) {
@@ -301,7 +299,6 @@ export const App: React.FC = () => {
         onReset={() => {
           resetForm();
           setCurrentStep(0);
-          setApplicationId('');
           setCaseNumber('');
         }}
       />
