@@ -71,7 +71,7 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
           onChange={(e) => onUpdate('passportNumber', e.target.value.toUpperCase())}
           error={errors.passportNumber}
           className="mt-4"
-          helperText="Format: 1 letter + 7 digits (e.g., A12345678)"
+          helperText="Letters and numbers only, no spaces"
           required
         />
 
@@ -102,12 +102,12 @@ export const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
         <Input
           label="Phone Number"
           type="tel"
-          placeholder="9876543210"
+          placeholder="+94 766 221 655"
           value={data.phone}
           onChange={(e) => onUpdate('phone', e.target.value)}
           error={errors.phone}
           className="mt-4"
-          helperText="10-digit Indian mobile number"
+          helperText="Include country code (e.g. +94 766 221 655)"
           required
         />
       </div>
