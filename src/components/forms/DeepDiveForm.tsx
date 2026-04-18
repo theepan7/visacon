@@ -178,13 +178,14 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
             const value = data[field.key];
 
             if (field.type === 'select') {
+              const strValue = typeof value === 'string' ? value : '';
               return (
                 <div key={field.key}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {field.label}
                   </label>
                   <select
-                    value={value || ''}
+                    value={strValue}
                     onChange={(e) => onUpdate(field.key, e.target.value)}
                     className={`w-full px-4 py-2.5 border rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                       errors[field.key] ? 'border-red-500' : 'border-gray-300'
@@ -208,13 +209,14 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
             }
 
             if (field.type === 'textarea') {
+              const strValue = typeof value === 'string' ? value : '';
               return (
                 <div key={field.key}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {field.label}
                   </label>
                   <textarea
-                    value={value || ''}
+                    value={strValue}
                     onChange={(e) => onUpdate(field.key, e.target.value)}
                     placeholder={field.placeholder}
                     rows={3}
@@ -233,12 +235,13 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
             }
 
             if (field.type === 'checkbox') {
+              const boolValue = typeof value === 'boolean' ? value : false;
               return (
                 <div key={field.key} className="flex items-center">
                   <input
                     type="checkbox"
                     id={field.key}
-                    checked={value || false}
+                    checked={boolValue}
                     onChange={(e) => onUpdate(field.key, e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
@@ -252,13 +255,14 @@ export const DeepDiveForm: React.FC<DeepDiveFormProps> = ({
               );
             }
 
+            const strValue = typeof value === 'string' ? value : '';
             return (
               <Input
                 key={field.key}
                 label={field.label}
                 type={field.type}
                 placeholder={field.placeholder}
-                value={value || ''}
+                value={strValue}
                 onChange={(e) => onUpdate(field.key, e.target.value)}
                 error={errors[field.key]}
                 helperText={field.helperText}
