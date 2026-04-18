@@ -4,7 +4,6 @@ import { useFirestore } from './hooks/useFirestore';
 import { useAuth } from './hooks/useAuth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from './services/firebaseConfig';
-import { v4 as uuidv4 } from 'uuid';
 
 // Components
 import { Landing } from './components/Landing';
@@ -31,8 +30,8 @@ export const App: React.FC = () => {
     resetForm,
   } = useFormState();
 
-  const { saveApplication, updateApplication } = useFirestore();
-  const { user, loading: authLoading } = useAuth();
+  const { saveApplication } = useFirestore();
+  const { user } = useAuth();
 
   const [appLoading, setAppLoading] = useState(false);
   const [appError, setAppError] = useState('');
@@ -110,10 +109,6 @@ export const App: React.FC = () => {
       setCurrentStep(3);
     };
 
-    const handlePaymentError = (error: string) => {
-      setAppError(error);
-    };
-
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-2xl mx-auto">
@@ -123,9 +118,7 @@ export const App: React.FC = () => {
             steps={['Basic Info', 'Payment', 'Details', 'Documents']}
           />
           <StripeCheckout
-            email={formData.email}
             onPaymentSuccess={handlePaymentSuccess}
-            onPaymentError={handlePaymentError}
             onBack={() => setCurrentStep(1)}
             loading={appLoading}
           />
@@ -228,7 +221,7 @@ export const App: React.FC = () => {
         if (formData.photoFile) {
           const photoRef = ref(
             storage,
-            `photos/${uuidv4()}_${formData.photoFile.name}`
+            `photos/${crypto.randomUUID()}_${formData.photoFile.name}`
           );
           await uploadBytes(photoRef, formData.photoFile);
           const photoUrl = await getDownloadURL(photoRef);
@@ -239,7 +232,7 @@ export const App: React.FC = () => {
         if (formData.passportBioFile) {
           const passportRef = ref(
             storage,
-            `passports/${uuidv4()}_${formData.passportBioFile.name}`
+            `passports/${crypto.randomUUID()}_${formData.passportBioFile.name}`
           );
           await uploadBytes(passportRef, formData.passportBioFile);
           const passportUrl = await getDownloadURL(passportRef);
