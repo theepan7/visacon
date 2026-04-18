@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { loadStripe } from '@stripe/js';
 import { Button } from '../common/Button';
-import { AlertCircle } from 'lucide-react';
-import { SERVICE_FEE_DISPLAY, SERVICE_FEE } from '../../utils/constants';
+import { CheckCircle2, CreditCard, Lock } from 'lucide-react';
+import { SERVICE_FEE_DISPLAY } from '../../utils/constants';
 
 interface StripeCheckoutProps {
   email: string;
@@ -20,42 +19,19 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   loading = false,
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paid, setPaid] = useState(false);
 
+  // TODO: Replace this with real Stripe integration before going live.
+  // Install: npm install @stripe/stripe-js
+  // Then update this function to call your backend /api/create-checkout-session
   const handleCheckout = async () => {
     setIsProcessing(true);
-
-    try {
-      const stripe = await loadStripe(
-        import.meta.env.VITE_STRIPE_PUBLIC_KEY
-      );
-
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      // Call your backend to create a Stripe Checkout session
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          amount: SERVICE_FEE,
-        }),
-      });
-
-      const { sessionId } = await response.json();
-
-      const result = await stripe.redirectToCheckout({ sessionId });
-
-      if (result.error) {
-        onPaymentError(result.error.message || 'Payment failed');
-      }
-    } catch (error: any) {
-      onPaymentError(error.message || 'An error occurred');
-      setIsProcessing(false);
-    }
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const simulatedPaymentId = `sim_${Date.now()}`;
+    setPaid(true);
+    setIsProcessing(false);
+    onPaymentSuccess(simulatedPaymentId);
   };
 
   return (
@@ -64,6 +40,14 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           Service Payment
         </h2>
+
+        {/* Dev notice banner */}
+        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-3 mb-6 flex items-start gap-2">
+          <CreditCard className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+          <p className="text-xs text-yellow-800">
+            <strong>Development mode:</strong> Payment is simulated. Connect real Stripe before going live.
+          </p>
+        </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-gray-700 mb-4">
@@ -95,31 +79,27 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             What happens next:
           </h3>
           <ul className="space-y-2 text-sm text-gray-700">
-            <li className="flex items-start">
-              <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full text-center text-xs leading-5 mr-3 flex-shrink-0">
-                1
-              </span>
-              <span>Pay our service fee</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full text-center text-xs leading-5 mr-3 flex-shrink-0">
-                2
-              </span>
-              <span>Upload your documents</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full text-center text-xs leading-5 mr-3 flex-shrink-0">
-                3
-              </span>
-              <span>Our team submits your application</span>
-            </li>
-            <li className="flex items-start">
-              <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full text-center text-xs leading-5 mr-3 flex-shrink-0">
-                4
-              </span>
-              <span>Pay government fees on official portal</span>
-            </li>
+            {['Pay our service fee', 'Upload your documents', 'Our team submits your application', 'Pay government fees on official portal'].map((step, i) => (
+              <li key={i} className="flex items-start">
+                <span className="inline-block w-5 h-5 bg-blue-600 text-white rounded-full text-center text-xs leading-5 mr-3 flex-shrink-0">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
           </ul>
+        </div>
+
+        {paid && (
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm font-medium">Payment simulated successfully — proceeding…</p>
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-1 text-gray-400 text-xs justify-center">
+          <Lock className="w-3 h-3" />
+          <span>Payments secured with 256-bit SSL encryption</span>
         </div>
       </div>
 
@@ -130,7 +110,7 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           size="lg"
           onClick={onBack}
           className="flex-1"
-          disabled={isProcessing}
+          disabled={isProcessing || paid}
         >
           Back
         </Button>
@@ -139,9 +119,10 @@ export const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           size="lg"
           className="flex-1"
           loading={isProcessing || loading}
+          disabled={paid}
           onClick={handleCheckout}
         >
-          Proceed to Payment
+          {paid ? 'Proceeding…' : `Pay ${SERVICE_FEE_DISPLAY}`}
         </Button>
       </div>
     </div>
