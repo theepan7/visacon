@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFormState } from './hooks/useFormState';
 import { useFirestore } from './hooks/useFirestore';
 import { useAuth } from './hooks/useAuth';
@@ -39,11 +39,41 @@ export const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   // Check if user is admin
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.email?.endsWith('@visaconcierge.admin')) {
       setIsAdmin(true);
     }
   }, [user]);
+
+  // Push a history entry whenever step changes (except initial load)
+  useEffect(() => {
+    // Replace state for step 0 (landing), push for all others
+    if (currentStep === 0) {
+      window.history.replaceState({ step: 0 }, '');
+    } else {
+      window.history.pushState({ step: currentStep }, '');
+    }
+    // Scroll to top on every step change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
+  // Listen for browser back/forward button
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const step = e.state?.step ?? 0;
+      // Don't allow going back from success page via browser button — reset instead
+      if (currentStep === 5) {
+        resetForm();
+        setCurrentStep(0);
+        setCaseNumber('');
+      } else {
+        setCurrentStep(step);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentStep]);
 
   // Show admin dashboard
   if (isAdmin && user) {
@@ -54,6 +84,21 @@ export const App: React.FC = () => {
   if (currentStep === 0) {
     return <Landing onStart={() => setCurrentStep(1)} />;
   }
+
+  const stepLabels = ['Basic Info', 'Payment', 'Details', 'Documents'];
+
+  const FormWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        <StepIndicator
+          currentStep={currentStep}
+          totalSteps={4}
+          steps={stepLabels}
+        />
+        {children}
+      </div>
+    </div>
+  );
 
   // Step 1: Basic Info
   if (currentStep === 1) {
@@ -77,27 +122,20 @@ export const App: React.FC = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          <StepIndicator
-            currentStep={1}
-            totalSteps={4}
-            steps={['Basic Info', 'Payment', 'Details', 'Documents']}
-          />
-          <BasicInfoForm
-            data={{
-              fullName: formData.fullName,
-              email: formData.email,
-              passportNumber: formData.passportNumber,
-              nationality: formData.nationality,
-              phone: formData.phone,
-            }}
-            errors={errors}
-            onUpdate={updateField}
-            onNext={handleNext}
-          />
-        </div>
-      </div>
+      <FormWrapper>
+        <BasicInfoForm
+          data={{
+            fullName: formData.fullName,
+            email: formData.email,
+            passportNumber: formData.passportNumber,
+            nationality: formData.nationality,
+            phone: formData.phone,
+          }}
+          errors={errors}
+          onUpdate={updateField}
+          onNext={handleNext}
+        />
+      </FormWrapper>
     );
   }
 
@@ -110,25 +148,18 @@ export const App: React.FC = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          <StepIndicator
-            currentStep={2}
-            totalSteps={4}
-            steps={['Basic Info', 'Payment', 'Details', 'Documents']}
-          />
-          <StripeCheckout
-            onPaymentSuccess={handlePaymentSuccess}
-            onBack={() => setCurrentStep(1)}
-            loading={appLoading}
-          />
-          {appError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              {appError}
-            </div>
-          )}
-        </div>
-      </div>
+      <FormWrapper>
+        <StripeCheckout
+          onPaymentSuccess={handlePaymentSuccess}
+          onBack={() => setCurrentStep(1)}
+          loading={appLoading}
+        />
+        {appError && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {appError}
+          </div>
+        )}
+      </FormWrapper>
     );
   }
 
@@ -164,60 +195,44 @@ export const App: React.FC = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          <StepIndicator
-            currentStep={3}
-            totalSteps={4}
-            steps={['Basic Info', 'Payment', 'Details', 'Documents']}
-          />
-          <DeepDiveForm
-            data={{
-              fatherName: formData.fatherName,
-              motherName: formData.motherName,
-              dateOfBirth: formData.dateOfBirth,
-              gender: formData.gender,
-              maritalStatus: formData.maritalStatus,
-              occupation: formData.occupation,
-              companyName: formData.companyName,
-              address: formData.address,
-              city: formData.city,
-              state: formData.state,
-              pincode: formData.pincode,
-              previousVisaRefusal: formData.previousVisaRefusal,
-              previousVisaRefusalReason: formData.previousVisaRefusalReason,
-              previousTravelCountries: formData.previousTravelCountries,
-              purposeOfVisit: formData.purposeOfVisit,
-              estimatedStayDuration: formData.estimatedStayDuration,
-              hostName: formData.hostName,
-              hostPhone: formData.hostPhone,
-            }}
-            errors={errors}
-            onUpdate={updateField}
-            onNext={handleNext}
-            onBack={() => setCurrentStep(2)}
-          />
-        </div>
-      </div>
+      <FormWrapper>
+        <DeepDiveForm
+          data={{
+            fatherName: formData.fatherName,
+            motherName: formData.motherName,
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            maritalStatus: formData.maritalStatus,
+            occupation: formData.occupation,
+            companyName: formData.companyName,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            previousVisaRefusal: formData.previousVisaRefusal,
+            previousVisaRefusalReason: formData.previousVisaRefusalReason,
+            previousTravelCountries: formData.previousTravelCountries,
+            purposeOfVisit: formData.purposeOfVisit,
+            estimatedStayDuration: formData.estimatedStayDuration,
+            hostName: formData.hostName,
+            hostPhone: formData.hostPhone,
+          }}
+          errors={errors}
+          onUpdate={updateField}
+          onNext={handleNext}
+          onBack={() => setCurrentStep(2)}
+        />
+      </FormWrapper>
     );
   }
 
   // Step 4: Document Upload
   if (currentStep === 4) {
-    const handlePhotoUpload = (file: File) => {
-      updateField('photoFile', file);
-    };
-
-    const handlePassportUpload = (file: File) => {
-      updateField('passportBioFile', file);
-    };
-
     const handleNext = async () => {
       setAppLoading(true);
       setAppError('');
 
       try {
-        // Upload photo
         if (formData.photoFile) {
           const photoRef = ref(
             storage,
@@ -228,7 +243,6 @@ export const App: React.FC = () => {
           updateField('photoUrl', photoUrl);
         }
 
-        // Upload passport bio
         if (formData.passportBioFile) {
           const passportRef = ref(
             storage,
@@ -239,7 +253,6 @@ export const App: React.FC = () => {
           updateField('passportBioUrl', passportUrl);
         }
 
-        // Generate case number
         const generatedCaseNumber = `VC-${Date.now()}-${Math.random()
           .toString(36)
           .substring(7)
@@ -247,7 +260,6 @@ export const App: React.FC = () => {
         updateField('caseNumber', generatedCaseNumber);
         setCaseNumber(generatedCaseNumber);
 
-        // Save to Firestore
         await saveApplication(formData as ApplicationFormData);
 
         setCurrentStep(5);
@@ -259,27 +271,20 @@ export const App: React.FC = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
-          <StepIndicator
-            currentStep={4}
-            totalSteps={4}
-            steps={['Basic Info', 'Payment', 'Details', 'Documents']}
-          />
-          <DocumentUploadForm
-            onPhotoUpload={handlePhotoUpload}
-            onPassportUpload={handlePassportUpload}
-            onNext={handleNext}
-            onBack={() => setCurrentStep(3)}
-            loading={appLoading}
-          />
-          {appError && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              {appError}
-            </div>
-          )}
-        </div>
-      </div>
+      <FormWrapper>
+        <DocumentUploadForm
+          onPhotoUpload={(file) => updateField('photoFile', file)}
+          onPassportUpload={(file) => updateField('passportBioFile', file)}
+          onNext={handleNext}
+          onBack={() => setCurrentStep(3)}
+          loading={appLoading}
+        />
+        {appError && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            {appError}
+          </div>
+        )}
+      </FormWrapper>
     );
   }
 
@@ -291,8 +296,8 @@ export const App: React.FC = () => {
         email={formData.email}
         onReset={() => {
           resetForm();
-          setCurrentStep(0);
           setCaseNumber('');
+          setCurrentStep(0);
         }}
       />
     );
